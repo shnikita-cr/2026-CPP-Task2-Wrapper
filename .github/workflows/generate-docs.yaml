@@ -35,7 +35,7 @@ jobs:
     - name: Run clang-uml
       run: |
         mkdir -p docs/diagrams
-        clang-uml --output-format mermaid
+        clang-uml
 
     - name: Prepare Comment Markdown
       run: |
