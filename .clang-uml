@@ -1,0 +1,14 @@
+compilation_database_dir: build
+output_directory: docs/diagrams
+diagrams:
+  pr_class_diagram:
+    type: class
+    glob:
+      - src/**/*.cpp
+      - src/**/*.h
+      - src/**/*.hpp
+    include_relations:
+      - inheritance
+      - association
+      - composition
+      - aggregation

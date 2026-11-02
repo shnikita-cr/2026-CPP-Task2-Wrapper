@@ -1,0 +1,49 @@
+name: PR Class Diagram Generator
+
+on:
+  pull_request_target:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+
+jobs:
+  generate-diagram:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+    - name: Install clang-uml
+      run: |
+        sudo add-apt-repository ppa:bkryza/clang-uml -y
+        sudo apt-get update
+        sudo apt-get install -y clang-uml
+
+    - name: Run clang-uml
+      run: |
+        mkdir -p docs/diagrams
+        clang-uml --fmt mermaid
+
+    - name: Prepare Comment Markdown
+      run: |
+        echo "### 📊 Автоматическая схема классов для этого PR" > pr_comment.md
+        echo "При каждом новом пуше архитектура ниже обновляется автоматически:" >> pr_comment.md
+        echo "" >> pr_comment.md
+        echo "\`\`\`mermaid" >> pr_comment.md
+        cat docs/diagrams/pr_class_diagram.mmd >> pr_comment.md
+        echo "\`\`\`" >> pr_comment.md
+
+    - name: Comment PR
+      uses: thollander/actions-comment-pull-request@v3
+      with:
+        file_path: pr_comment.md
+        comment_tag: class-diagram-blueprint
+        github-token: ${{ secrets.GITHUB_TOKEN }}
