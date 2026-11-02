@@ -3,7 +3,7 @@
 
 class InitialArchitecturePlaceholder {
 public:
-    void projectInitialized() {}
+    static void projectInitialized() {}
 };
 
 #endif // PLACEHOLDER_H
