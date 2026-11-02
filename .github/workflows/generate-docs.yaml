@@ -12,7 +12,7 @@ on:
 
 jobs:
   generate-diagram:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       pull-requests: write
 
@@ -27,11 +27,9 @@ jobs:
 
     - name: Install clang-uml
       run: |
-        PART1="https://github.com/bkryza/clang-uml/releases"
-        PART2="/download/0.6.3/clang-uml-linux-x86_64.tar.gz"
-        curl -sSLO "${PART1}${PART2}"
-        tar -xzf clang-uml-linux-x86_64.tar.gz
-        sudo mv clang-uml/bin/clang-uml /usr/local/bin/
+        sudo add-apt-repository ppa:bkryza/clang-uml -y
+        sudo apt-get update
+        sudo apt-get install -y clang-uml
         clang-uml --version
 
     - name: Run clang-uml
