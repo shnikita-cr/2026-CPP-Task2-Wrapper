@@ -7,6 +7,3 @@ diagrams:
       - src/**/*.cpp
       - src/**/*.h
       - src/**/*.hpp
-    exclude:
-      namespaces:
-        - std
