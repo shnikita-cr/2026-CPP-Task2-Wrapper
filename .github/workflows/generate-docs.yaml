@@ -25,18 +25,24 @@ jobs:
     - name: Configure CMake
       run: cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
-    - name: Run clang-uml via Official Docker Container
+    - name: Install clang-uml
+      run: |
+        PART1="https://github.com/bkryza/clang-uml/releases"
+        PART2="/download/0.6.3/clang-uml-linux-x86_64.tar.gz"
+        curl -sSLO "${PART1}${PART2}"
+        tar -xzf clang-uml-linux-x86_64.tar.gz
+        sudo mv clang-uml/bin/clang-uml /usr/local/bin/
+        clang-uml --version
+
+    - name: Run clang-uml
       run: |
         mkdir -p docs/diagrams
-        docker run --rm \
-          -v ${{ github.workspace }}:${{ github.workspace }} \
-          -w ${{ github.workspace }} \
-          bkryza/clang-uml:latest clang-uml --fmt mermaid
+        clang-uml --fmt mermaid
 
     - name: Prepare Comment Markdown
       run: |
-        echo "### Автоматическая схема классов для этого PR" > pr_comment.md
-        echo "При каждом новом пуше архитектура ниже обновляется автоматически:" >> pr_comment.md
+        echo "### 📊 Автоматическая схема классов для этого PR" > pr_comment.md
+        echo "При каждом новом push архитектура ниже обновляется автоматически:" >> pr_comment.md
         echo "" >> pr_comment.md
         echo "\`\`\`mermaid" >> pr_comment.md
         cat docs/diagrams/pr_class_diagram.mmd >> pr_comment.md
