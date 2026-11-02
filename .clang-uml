@@ -12,3 +12,6 @@ diagrams:
       - association
       - composition
       - aggregation
+    exclude:
+      namespaces:
+        - std
