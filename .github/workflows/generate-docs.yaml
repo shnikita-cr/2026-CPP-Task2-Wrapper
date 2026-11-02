@@ -35,8 +35,7 @@ jobs:
     - name: Run clang-uml
       run: |
         mkdir -p docs/diagrams
-        # Флаги позволяют корректно проходить тесты даже на пустых файлах src/
-        clang-uml --allow-empty --query-driver .
+        clang-uml
 
     - name: Prepare Comment Markdown
       run: |
