@@ -35,7 +35,8 @@ jobs:
     - name: Run clang-uml
       run: |
         mkdir -p docs/diagrams
-        clang-uml
+        # Флаги позволяют корректно проходить тесты даже на пустых файлах src/
+        clang-uml --allow-empty --query-driver .
 
     - name: Prepare Comment Markdown
       run: |
@@ -43,7 +44,11 @@ jobs:
         echo "При каждом новом push архитектура ниже обновляется автоматически:" >> pr_comment.md
         echo "" >> pr_comment.md
         echo "\`\`\`mermaid" >> pr_comment.md
-        cat docs/diagrams/pr_class_diagram.mmd >> pr_comment.md
+        if [ -f docs/diagrams/pr_class_diagram.mmd ]; then
+          cat docs/diagrams/pr_class_diagram.mmd >> pr_comment.md
+        else
+          echo "%% Схема пока пуста. Добавьте ваши классы Wrapper и Engine в папку src/" >> pr_comment.md
+        fi
         echo "\`\`\`" >> pr_comment.md
 
     - name: Comment PR
