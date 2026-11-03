@@ -1,0 +1,58 @@
+name: PR Class Diagram Generator
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+  pull_request_target:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+
+jobs:
+  generate-diagram:
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: write
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+    - name: Install clang-uml
+      run: |
+        sudo add-apt-repository ppa:bkryza/clang-uml -y
+        sudo apt-get update
+        sudo apt-get install -y clang-uml
+        clang-uml --version
+
+    - name: Run clang-uml
+      run: |
+        mkdir -p docs/diagrams
+        clang-uml
+
+    - name: Prepare Comment Markdown
+      run: |
+        echo "### 📊 Автоматическая схема классов для этого PR" > pr_comment.md
+        echo "При каждом новом push архитектура ниже обновляется автоматически:" >> pr_comment.md
+        echo "" >> pr_comment.md
+        echo "\`\`\`mermaid" >> pr_comment.md
+        if [ -f docs/diagrams/pr_class_diagram.mmd ]; then
+          cat docs/diagrams/pr_class_diagram.mmd >> pr_comment.md
+        else
+          echo "%% Схема пока пуста. Добавьте ваши классы Wrapper и Engine в папку src/" >> pr_comment.md
+        fi
+        echo "\`\`\`" >> pr_comment.md
+
+    - name: Comment PR
+      uses: thollander/actions-comment-pull-request@v3
+      with:
+        file-path: pr_comment.md
+        comment-tag: class-diagram-blueprint
+        github-token: ${{ secrets.GITHUB_TOKEN }}
