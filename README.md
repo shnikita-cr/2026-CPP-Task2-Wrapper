@@ -47,13 +47,13 @@ std::cout << engine.execute("command_name", {{"arg1", 4}, {"arg2", 5}}) << std::
 
 При создании или обновлении PR автоматически запускается комплекс тестов на сервере GitHub Actions. При ошибке их выполнения решение задания принято не будет.
 
-Конвейер автоматизации состоит из трех последовательно-параллельных этапов проверки:
-1. **Сборка проекта (Release Mode):** Проверяет корректность конфигурации CMake и компиляцию проекта в режиме оптимизации.
+Конвейер автоматизации состоит из трёх этапов проверки:
+1. **Сборка проекта (Release Mode):** Проверяет корректность конфигурации CMake и компиляцию проекта в режиме оптимизации. Сборка идёт с `-Wall -Wextra -Werror`: любое предупреждение компилятора считается ошибкой.
 2. **Статический анализ кода:** Проверяет исходный код на соответствие стандартам качества и сложность:
    * `lizard` — вычисляет цикломатическую сложность функций (максимально допустимая сложность — **18**).
-   * `cppcheck` — выполняет поиск потенциальных ошибок и утечек ресурсов на этапе статического анализа.
+   * `cppcheck` — `warning,performance,portability`, inline-подавления, `unusedFunction` подавлен.
    * `clang-tidy` — проверяет код на соответствие современным стандартам (Modern C++), стилю оформления и производительности.
-3. **Динамический анализ памяти (ASan/UBSan):** Запускает приложение в режиме отладки со встроенными инструментами анализа во время выполнения:
+3. **Динамический анализ памяти (ASan/UBSan):** Запускает все собранные исполняемые файлы в режиме отладки со встроенными инструментами анализа во время выполнения:
    * `AddressSanitizer` — отслеживает выходы за границы массивов, работу с освобожденной памятью и утечки памяти.
    * `UndefinedBehaviorSanitizer` — фиксирует неопределенное поведение (переполнения, деления на ноль и аналогичные нарушения).
 
@@ -61,9 +61,10 @@ std::cout << engine.execute("command_name", {{"arg1", 4}, {"arg2", 5}}) << std::
 
 ## Локальная проверка перед отправкой
 
-### 1. Генерация базы компиляции CMake
+### 1. Сборка с предупреждениями
 ```bash
-cmake -B build-sanitizers -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+cmake -B build-sanitizers -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_FLAGS="-Wall -Wextra -Werror"
+cmake --build build-sanitizers --config Debug
 ```
 
 ### 2. Запуск статических анализаторов
@@ -71,15 +72,21 @@ cmake -B build-sanitizers -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 * **Для Linux / macOS (в терминалах Bash/Zsh):**
   ```bash
   lizard src/ -C 18 && \
-  cppcheck --enable=all --inconclusive --std=c++17 --error-exitcode=1 src/ --suppress=missingIncludeSystem && \
+  cppcheck --enable=warning,performance,portability --std=c++17 --language=c++ --inline-suppr --suppress=missingIncludeSystem --suppress=unusedFunction --quiet --error-exitcode=1 src/ && \
   find src/ -name "*.cpp" | xargs clang-tidy -p build-sanitizers/ --checks='-*,bugprone-*,modernize-*,performance-*,readability-*,-modernize-use-trailing-return-type' --warnings-as-errors='*'
   ```
 
 * **Для Windows (в консоли PowerShell):**
   ```powershell
   lizard src/ -C 18
-  if (\$?) { cppcheck --enable=all --inconclusive --std=c++17 --error-exitcode=1 src/ --suppress=missingIncludeSystem }
-  if (\(?) { Get-ChildItem src/ -Filter *.cpp -Recurse \vert{} ForEach-Object { clang-tidy\)_.FullName -p build-sanitizers/ --checks='-*,bugprone-*,modernize-*,performance-*,readability-*,-modernize-use-trailing-return-type' --warnings-as-errors='*' } }
+  if ($?) {
+      cppcheck --enable=warning,performance,portability --std=c++17 --language=c++ --inline-suppr --suppress=missingIncludeSystem --suppress=unusedFunction --quiet --error-exitcode=1 src/
+  }
+  if ($?) {
+      Get-ChildItem src/ -Filter *.cpp -Recurse | ForEach-Object {
+          clang-tidy $_.FullName -p build-sanitizers/ --checks='-*,bugprone-*,modernize-*,performance-*,readability-*,-modernize-use-trailing-return-type' --warnings-as-errors='*'
+      }
+  }
   ```
 
 ### 3. Локальная проверка динамической памяти (ASan/UBSan)
@@ -89,5 +96,5 @@ cmake -B build-sanitizers -DCMAKE_BUILD_TYPE=Debug \
   -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
 cmake --build build-sanitizers --config Debug
 
-./build-sanitizers/wrapper_app
+find build-sanitizers -type f -perm -u+x ! -path '*/CMakeFiles/*' ! -name '*.so*' -exec timeout 60 {} \;
 ```
