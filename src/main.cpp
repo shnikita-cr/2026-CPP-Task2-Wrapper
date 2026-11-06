@@ -6,5 +6,5 @@ int main(){
     std::cout << "Hello Engine!\n";
 
     InitialArchitecturePlaceholder::projectInitialized();
-    return 0;
+    return 0; 
 }
