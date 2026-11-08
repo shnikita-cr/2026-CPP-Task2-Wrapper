@@ -5,5 +5,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(wrapper_app src/main.cpp)
+add_executable(wrapper_app
+    src/main.cpp
+)
+
+target_include_directories(wrapper_app PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+enable_testing()
 add_test(NAME BaseExecutionTest COMMAND wrapper_app)
