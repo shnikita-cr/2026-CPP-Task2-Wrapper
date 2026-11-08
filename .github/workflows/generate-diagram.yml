@@ -1,0 +1,54 @@
+name: Generate PR Class Diagram
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+
+permissions:
+  contents: read
+
+jobs:
+  generate-diagram:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Install clang-uml
+        run: |
+          sudo add-apt-repository ppa:bkryza/clang-uml -y
+          sudo apt-get update
+          sudo apt-get install -y clang-uml
+
+      - name: Run clang-uml
+        run: |
+          mkdir -p docs/diagrams
+          clang-uml -g mermaid
+
+      - name: Prepare Comment Markdown
+        run: |
+          echo "### 📊 Автоматическая схема классов для этого PR" > pr_comment.md
+          echo "При каждом новом push архитектура ниже обновляется автоматически:" >> pr_comment.md
+          echo "" >> pr_comment.md
+          echo "\`\`\`mermaid" >> pr_comment.md
+          if [ -f docs/diagrams/pr_class_diagram.mmd ]; then
+            cat docs/diagrams/pr_class_diagram.mmd >> pr_comment.md
+          else
+            echo "%% Схема пока пуста. Добавьте ваши классы Wrapper и Engine в папку src/" >> pr_comment.md
+          fi
+          echo "\`\`\`" >> pr_comment.md
+          echo "${{ github.event.pull_request.number }}" > pr_number.txt
+
+      - name: Upload Diagram Artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: pr-diagram-comment
+          path: |
+            pr_comment.md
+            pr_number.txt
+          retention-days: 1

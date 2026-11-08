@@ -1,0 +1,34 @@
+name: Comment PR Class Diagram
+
+on:
+  workflow_run:
+    workflows: ["Generate PR Class Diagram"]
+    types:
+      - completed
+
+permissions:
+  pull-requests: write
+
+jobs:
+  post-comment:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: pr-diagram-comment
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read PR Number
+        id: pr
+        run: echo "number=$(cat pr_number.txt)" >> $GITHUB_OUTPUT
+
+      - name: Comment PR
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          pr-number: ${{ steps.pr.outputs.number }}
+          file-path: pr_comment.md
+          comment-tag: class-diagram-blueprint
+          github-token: ${{ secrets.GITHUB_TOKEN }}
