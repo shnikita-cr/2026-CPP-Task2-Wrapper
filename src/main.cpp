@@ -108,11 +108,14 @@ static void run_document_demo() {
 }
 
 int main() {
-    std::cout << "Hello Wrapper!\n";
-    std::cout << "Hello Engine!\n";
-
-    run_classic_demo();
-    run_document_demo();
-
+    try {
+        std::cout << "Hello Wrapper!\n";
+        std::cout << "Hello Engine!\n";
+        run_classic_demo();
+        run_document_demo();
+    } catch (const std::exception& ex) {
+        std::cerr << "Error: " << ex.what() << '\n';
+        return 1;
+    }
     return 0;
 }
