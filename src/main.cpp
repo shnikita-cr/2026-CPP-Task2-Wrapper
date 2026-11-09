@@ -1,9 +1,3 @@
-//
-//  main.cpp
-//  Wrapper
-//
-//  Created by Богдан on 08.11.2026.
-//
 #include "engine.h"
 #include "text_document.h"
 #include "wrapper.h"
@@ -12,52 +6,63 @@
 #include <memory>
 #include <string>
 
+namespace {
+constexpr int kDefaultArg1 = 0;
+constexpr int kOverrideArg1 = 4;
+constexpr int kTypedArg1 = 42;
+constexpr int kSentenceStart = 1;
+}  // namespace
+
 class Subject {
 public:
-    std::string func(int arg1, const std::string& arg2) {
-        return "Subject::func called with arg1=" + std::to_string(arg1) +
-               ", arg2=" + arg2;
+    std::string func(int arg_one, const std::string& arg_two) {
+        return "Subject::func called with arg1=" + std::to_string(arg_one) +
+               ", arg2=" + arg_two + " on " + label_;
     }
 
     std::string func_map(const AnyMap& args) {
-        const int a1 = get_arg_or<int>(args, "arg1", 0);
-        const std::string a2 =
+        const int arg_one = get_arg_or<int>(args, "arg1", kDefaultArg1);
+        const auto arg_two =
             get_arg_or<std::string>(args, "arg2", std::string("a"));
-        return func(a1, a2);
+        return func(arg_one, arg_two);
     }
+
+private:
+    std::string label_{"Subject"};
 };
 
 static void run_classic_demo() {
-    std::cout << "Part 1: Classic Wrapper / Engine demo\n";
+    std::cout << "=== Part 1: Classic Wrapper / Engine demo ===\n";
 
     Subject subj;
 
     Wrapper wrapper1(&subj, &Subject::func_map,
-                     AnyMap{{"arg1", 0}, {"arg2", std::string("a")}});
+                     AnyMap{{"arg1", kDefaultArg1}, {"arg2", std::string("a")}});
 
     Engine engine;
     engine.register_command(&wrapper1, "command_name");
 
-    std::cout << engine.execute("command_name",
-                                {{"arg1", 4}, {"arg2", std::string("b")}})
+    std::cout << engine.execute(
+                     "command_name",
+                     {{"arg1", kOverrideArg1}, {"arg2", std::string("b")}})
               << '\n';
 
     auto wrapper2 = make_wrapper(
         &subj, &Subject::func,
-        AnyMap{{"arg1", 0}, {"arg2", std::string("a")}},
-        [](Subject* s, auto method, const AnyMap& args) -> std::any {
-            const int a1 = get_arg_or<int>(args, "arg1", 0);
-            const std::string a2 =
+        AnyMap{{"arg1", kDefaultArg1}, {"arg2", std::string("a")}},
+        [](Subject* subject, auto method, const AnyMap& args) -> std::any {
+            const int arg_one = get_arg_or<int>(args, "arg1", kDefaultArg1);
+            const auto arg_two =
                 get_arg_or<std::string>(args, "arg2", std::string("a"));
-            return (s->*method)(a1, a2);
+            return (subject->*method)(arg_one, arg_two);
         });
 
     engine.register_command(std::move(wrapper2), "typed_command");
-    std::cout << engine.execute("typed_command", {{"arg1", 42}}) << '\n';
+    std::cout << engine.execute("typed_command", {{"arg1", kTypedArg1}}) << '\n';
 }
 
 static void run_document_demo() {
-    std::cout << "\nPart 2: Text document operations via Engine\n";
+    std::cout << "\n=== Part 2: Text document operations via Engine ===\n";
 
     TextDocument doc(
         "hello world. this is a test document. "
@@ -73,7 +78,7 @@ static void run_document_demo() {
     Wrapper cap_words_cmd(&doc, &TextDocument::capitalize_words, AnyMap{});
     Wrapper cap_sent_cmd(&doc, &TextDocument::capitalize_sentences, AnyMap{});
     Wrapper number_cmd(&doc, &TextDocument::number_sentences,
-                       AnyMap{{"start", 1}});
+                       AnyMap{{"start", kSentenceStart}});
 
     Engine doc_engine;
     doc_engine.register_command(&replace_cmd, "replace");
@@ -98,7 +103,8 @@ static void run_document_demo() {
               << doc_engine.execute("capitalize_words") << "\n\n";
 
     std::cout << "After number_sentences (start=1):\n"
-              << doc_engine.execute("number_sentences", {{"start", 1}})
+              << doc_engine.execute("number_sentences",
+                                   {{"start", kSentenceStart}})
               << "\n\n";
 
     std::cout << "After replace 'Test' -> 'Demo':\n"
@@ -111,11 +117,13 @@ int main() {
     try {
         std::cout << "Hello Wrapper!\n";
         std::cout << "Hello Engine!\n";
+
         run_classic_demo();
         run_document_demo();
     } catch (const std::exception& ex) {
         std::cerr << "Error: " << ex.what() << '\n';
         return 1;
     }
+
     return 0;
 }
