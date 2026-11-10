@@ -15,4 +15,8 @@ if(BUILD_TESTING)
     add_executable(arguments_tests src/tests/arguments_tests.cpp)
     target_include_directories(arguments_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     add_test(NAME arguments_tests COMMAND arguments_tests)
+
+    add_executable(wrapper_tests src/tests/wrapper_tests.cpp)
+    target_include_directories(wrapper_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+    add_test(NAME wrapper_tests COMMAND wrapper_tests)
 endif()
