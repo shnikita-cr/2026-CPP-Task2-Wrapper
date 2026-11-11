@@ -7,16 +7,24 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(CTest)
 
+add_library(wrapper_engine STATIC src/engine.cpp)
+target_include_directories(wrapper_engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
 add_executable(wrapper_app src/main.cpp)
+target_link_libraries(wrapper_app PRIVATE wrapper_engine)
 
 if(BUILD_TESTING)
     add_test(NAME BaseExecutionTest COMMAND wrapper_app)
 
     add_executable(arguments_tests src/tests/arguments_tests.cpp)
-    target_include_directories(arguments_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+    target_link_libraries(arguments_tests PRIVATE wrapper_engine)
     add_test(NAME arguments_tests COMMAND arguments_tests)
 
     add_executable(wrapper_tests src/tests/wrapper_tests.cpp)
-    target_include_directories(wrapper_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+    target_link_libraries(wrapper_tests PRIVATE wrapper_engine)
     add_test(NAME wrapper_tests COMMAND wrapper_tests)
+
+    add_executable(engine_tests src/tests/engine_tests.cpp)
+    target_link_libraries(engine_tests PRIVATE wrapper_engine)
+    add_test(NAME engine_tests COMMAND engine_tests)
 endif()
