@@ -1,4 +1,5 @@
 #include "test_support.h"
+#include "text/sentences.h"
 #include "text_document.h"
 
 #include <array>
@@ -165,6 +166,203 @@ void preserves_utf8_without_matches()
             "Unmatched Unicode text must remain intact");
 }
 
+void capitalizes_word_initials()
+{
+    TextDocument document(u8"hello, world! ёж идёт.");
+
+    require(document.capitalize_words() == u8"Hello, World! Ёж Идёт.",
+            "Each ASCII or Russian word must start with a capital letter");
+    require(document.text() == u8"Hello, World! Ёж Идёт.", "Word capitalization must update state");
+}
+
+void capitalizes_only_first_letter_in_each_token()
+{
+    TextDocument document("hELLO 123hello _foo_bar foo2bar");
+
+    require(document.capitalize_words() == "HELLO 123Hello _Foo_bar Foo2bar",
+            "Digits and underscores must not split tokens or prevent finding the first letter");
+}
+
+void capitalizes_words_separated_by_hyphens_and_emoji()
+{
+    TextDocument document(u8"hello-world🐈ёж");
+
+    require(document.capitalize_words() == u8"Hello-World🐈Ёж",
+            "Hyphens and emoji must delimit words without being changed");
+}
+
+void preserves_empty_punctuation_and_capitalized_words()
+{
+    const std::array samples = {"", " \t\r\n", u8"?!...🐈", u8"Hello, World! Ёж."};
+    for (const auto* original : samples)
+    {
+        TextDocument document(original);
+        require(document.capitalize_words() == original,
+                "Word capitalization must preserve empty, punctuation-only and capitalized text");
+    }
+}
+
+void capitalizes_sentence_initials()
+{
+    TextDocument document(u8"hello world. ёж идёт! \"next?\" last");
+
+    require(document.capitalize_sentences() == u8"Hello world. Ёж идёт! \"Next?\" Last",
+            "Each sentence must start with a capital letter");
+    require(document.text() == u8"Hello world. Ёж идёт! \"Next?\" Last",
+            "Sentence capitalization must update state");
+}
+
+void capitalizes_sentences_without_changing_layout()
+{
+    TextDocument document(u8" \t\"123 hello\nworld...\" \r\nёж?!  42 next");
+
+    require(document.capitalize_sentences() == u8" \t\"123 Hello\nworld...\" \r\nЁж?!  42 Next",
+            "Quotes and digits must be skipped while original whitespace remains intact");
+}
+
+void does_not_treat_newlines_as_sentence_endings()
+{
+    TextDocument document("first line\nsecond line. next\nlast");
+
+    require(document.capitalize_sentences() == "First line\nsecond line. Next\nlast",
+            "A newline alone must not start a new sentence");
+}
+
+void capitalizes_after_nested_closing_marks()
+{
+    TextDocument document(u8"«(one!)» [two?] {three...} “four.” ‘five!’ tail");
+
+    require(document.capitalize_sentences() == u8"«(One!)» [Two?] {Three...} “Four.” ‘Five!’ Tail",
+            "Closing quotes and brackets must not hide the next sentence");
+}
+
+void preserves_empty_punctuation_and_capitalized_sentences()
+{
+    const std::array samples = {"", " \t\r\n", u8"?!...🐈", u8"Hello world. Ёж идёт!"};
+    for (const auto* original : samples)
+    {
+        TextDocument document(original);
+        require(document.capitalize_sentences() == original,
+                "Sentence capitalization must preserve text without lowercase initials");
+    }
+}
+
+void capitalization_is_idempotent()
+{
+    TextDocument words("hello world");
+    require(words.capitalize_words() == "Hello World", "First capitalization must change words");
+    require(words.capitalize_words() == "Hello World", "Repeated capitalization must be stable");
+
+    TextDocument sentences("hello world. next");
+    require(sentences.capitalize_sentences() == "Hello world. Next",
+            "First capitalization must change sentences");
+    require(sentences.capitalize_sentences() == "Hello world. Next",
+            "Repeated sentence capitalization must be stable");
+}
+
+void finds_trimmed_unicode_sentence_ranges()
+{
+    const std::u32string original = U" \tёж?!\n\"next?\" last  ";
+    const auto           ranges   = text::sentence_ranges(original);
+    const std::array     expected = {U"ёж?!", U"\"next?\"", U"last"};
+
+    require(ranges.size() == expected.size(), "Expected exactly three Unicode sentence ranges");
+    std::size_t previous_end = 0;
+    for (std::size_t index = 0; index < ranges.size(); ++index)
+    {
+        const auto& range = ranges[index];
+        require(range.first >= previous_end && range.first < range.second &&
+                    range.second <= original.size(),
+                "Sentence ranges must be ordered nonempty half-open character ranges");
+        require(original.substr(range.first, range.second - range.first) == expected[index],
+                "Ranges must preserve sentence content and trim surrounding ASCII whitespace");
+        previous_end = range.second;
+    }
+}
+
+void handles_empty_and_unterminated_sentence_ranges()
+{
+    require(text::sentence_ranges(U"").empty(), "Empty text must produce no sentence ranges");
+    require(text::sentence_ranges(U" \t\n\r\v\f").empty(), "ASCII whitespace must be ignored");
+
+    const std::u32string original = U" \ttail without stop\n ";
+    const auto           ranges   = text::sentence_ranges(original);
+    require(ranges.size() == 1, "Unterminated nonempty tail must form one sentence");
+    require(original.substr(ranges.front().first, ranges.front().second - ranges.front().first) ==
+                U"tail without stop",
+            "Unterminated tail must also be trimmed");
+}
+
+void keeps_terminal_groups_and_nested_closers_together()
+{
+    const std::u32string original = U" «(one?!)» two... tail ";
+    const auto           ranges   = text::sentence_ranges(original);
+    const std::array     expected = {U"«(one?!)»", U"two...", U"tail"};
+
+    require(ranges.size() == expected.size(), "Terminal groups must not produce extra sentences");
+    for (std::size_t index = 0; index < ranges.size(); ++index)
+    {
+        require(original.substr(ranges[index].first, ranges[index].second - ranges[index].first) ==
+                    expected[index],
+                "Nested closers must stay with their terminating punctuation");
+    }
+}
+
+void distinguishes_closing_quotes_from_new_opening_quotes()
+{
+    const std::u32string original = U"\"one!\"?\"two.\"";
+    const auto           ranges   = text::sentence_ranges(original);
+
+    require(ranges.size() == 2, "Quote-adjacent sentences must remain separate");
+    require(original.substr(ranges.front().first, ranges.front().second - ranges.front().first) ==
+                U"\"one!\"?",
+            "Closing quote and following terminal punctuation belong to the first sentence");
+    require(original.substr(ranges.back().first, ranges.back().second - ranges.back().first) ==
+                U"\"two.\"",
+            "Opening quote of the next sentence must not be consumed as a closer");
+}
+
+void treats_internal_apostrophes_as_text()
+{
+    const std::u32string original = U"don't. 'go.' next";
+    const auto           ranges   = text::sentence_ranges(original);
+    const std::array     expected = {U"don't.", U"'go.'", U"next"};
+
+    require(ranges.size() == expected.size(), "Contractions must not change quote nesting");
+    for (std::size_t index = 0; index < ranges.size(); ++index)
+    {
+        require(original.substr(ranges[index].first, ranges[index].second - ranges[index].first) ==
+                    expected[index],
+                "Quoted sentence boundaries must survive internal apostrophes");
+    }
+}
+
+void distinguishes_possessives_from_closing_quotes()
+{
+    struct Sample
+    {
+        const char32_t* input;
+        const char32_t* first_sentence;
+    };
+    const std::array samples = {
+        Sample{U"dogs' toys. 'go.'", U"dogs' toys."},
+        Sample{U"'dogs' play. 'go.'", U"'dogs' play."},
+    };
+    for (const auto& sample : samples)
+    {
+        const std::u32string original = sample.input;
+        const auto           ranges   = text::sentence_ranges(original);
+        require(ranges.size() == 2, "Possessive apostrophes must not create phantom quotes");
+        require(
+            original.substr(ranges.front().first, ranges.front().second - ranges.front().first) ==
+                sample.first_sentence,
+            "Trailing possessives and genuine closing quotes must keep their own meaning");
+        require(original.substr(ranges.back().first, ranges.back().second - ranges.back().first) ==
+                    U"'go.'",
+                "Following quoted sentence must include its closing quote");
+    }
+}
+
 } // namespace
 
 int main()
@@ -190,6 +388,32 @@ int main()
             {"accepts_arguments_aliased_to_document_storage",
              accepts_arguments_aliased_to_document_storage},
             {"preserves_utf8_without_matches", preserves_utf8_without_matches},
+            {"capitalizes_word_initials", capitalizes_word_initials},
+            {"capitalizes_only_first_letter_in_each_token",
+             capitalizes_only_first_letter_in_each_token},
+            {"capitalizes_words_separated_by_hyphens_and_emoji",
+             capitalizes_words_separated_by_hyphens_and_emoji},
+            {"preserves_empty_punctuation_and_capitalized_words",
+             preserves_empty_punctuation_and_capitalized_words},
+            {"capitalizes_sentence_initials", capitalizes_sentence_initials},
+            {"capitalizes_sentences_without_changing_layout",
+             capitalizes_sentences_without_changing_layout},
+            {"does_not_treat_newlines_as_sentence_endings",
+             does_not_treat_newlines_as_sentence_endings},
+            {"capitalizes_after_nested_closing_marks", capitalizes_after_nested_closing_marks},
+            {"preserves_empty_punctuation_and_capitalized_sentences",
+             preserves_empty_punctuation_and_capitalized_sentences},
+            {"capitalization_is_idempotent", capitalization_is_idempotent},
+            {"finds_trimmed_unicode_sentence_ranges", finds_trimmed_unicode_sentence_ranges},
+            {"handles_empty_and_unterminated_sentence_ranges",
+             handles_empty_and_unterminated_sentence_ranges},
+            {"keeps_terminal_groups_and_nested_closers_together",
+             keeps_terminal_groups_and_nested_closers_together},
+            {"distinguishes_closing_quotes_from_new_opening_quotes",
+             distinguishes_closing_quotes_from_new_opening_quotes},
+            {"treats_internal_apostrophes_as_text", treats_internal_apostrophes_as_text},
+            {"distinguishes_possessives_from_closing_quotes",
+             distinguishes_possessives_from_closing_quotes},
         });
     }
     catch (...)

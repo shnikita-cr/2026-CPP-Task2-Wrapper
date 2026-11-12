@@ -7,7 +7,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(CTest)
 
-add_library(wrapper_engine STATIC src/engine.cpp src/text/utf8.cpp src/text_document.cpp)
+add_library(wrapper_engine STATIC
+    src/engine.cpp
+    src/text/sentences.cpp
+    src/text/utf8.cpp
+    src/text_document.cpp
+)
 target_include_directories(wrapper_engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 if(MSVC)
     target_compile_options(wrapper_engine PUBLIC /utf-8)

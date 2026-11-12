@@ -1,5 +1,6 @@
 #include "text_document.h"
 
+#include "text/sentences.h"
 #include "text/utf8.h"
 
 #include <algorithm>
@@ -54,10 +55,7 @@ std::string TextDocument::replace_words(const std::string& from,
         }
     }
 
-    std::string updated = text::encode_utf8(replaced);
-    std::string result  = updated;
-    text_.swap(updated);
-    return result;
+    return update_text(replaced);
 }
 
 std::string TextDocument::find_phrase(const std::string& phrase) const
@@ -69,4 +67,52 @@ std::string TextDocument::find_phrase(const std::string& phrase) const
     (void)text::decode_utf8(phrase);
 
     return text_.find(phrase) != std::string::npos ? "found" : "not found";
+}
+
+std::string TextDocument::capitalize_words()
+{
+    auto value   = text::decode_utf8(text_);
+    bool pending = true;
+    for (auto& character : value)
+    {
+        if (!text::is_word_character(character))
+        {
+            pending = true;
+            continue;
+        }
+        if (pending && text::is_letter(character))
+        {
+            character = text::uppercase(character);
+            pending   = false;
+        }
+    }
+
+    return update_text(value);
+}
+
+std::string TextDocument::capitalize_sentences()
+{
+    auto       value  = text::decode_utf8(text_);
+    const auto ranges = text::sentence_ranges(value);
+    for (const auto& range : ranges)
+    {
+        for (std::size_t index = range.first; index < range.second; ++index)
+        {
+            if (text::is_letter(value[index]))
+            {
+                value[index] = text::uppercase(value[index]);
+                break;
+            }
+        }
+    }
+
+    return update_text(value);
+}
+
+std::string TextDocument::update_text(const std::u32string& value)
+{
+    std::string updated = text::encode_utf8(value);
+    std::string result  = updated;
+    text_.swap(updated);
+    return result;
 }
