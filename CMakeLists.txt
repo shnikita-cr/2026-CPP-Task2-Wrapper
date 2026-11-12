@@ -7,8 +7,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(CTest)
 
-add_library(wrapper_engine STATIC src/engine.cpp)
+add_library(wrapper_engine STATIC src/engine.cpp src/text/utf8.cpp src/text_document.cpp)
 target_include_directories(wrapper_engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+if(MSVC)
+    target_compile_options(wrapper_engine PUBLIC /utf-8)
+endif()
 
 add_executable(wrapper_app src/main.cpp)
 target_link_libraries(wrapper_app PRIVATE wrapper_engine)
@@ -27,4 +30,12 @@ if(BUILD_TESTING)
     add_executable(engine_tests src/tests/engine_tests.cpp)
     target_link_libraries(engine_tests PRIVATE wrapper_engine)
     add_test(NAME engine_tests COMMAND engine_tests)
+
+    add_executable(utf8_tests src/tests/utf8_tests.cpp)
+    target_link_libraries(utf8_tests PRIVATE wrapper_engine)
+    add_test(NAME utf8_tests COMMAND utf8_tests)
+
+    add_executable(text_document_tests src/tests/text_document_tests.cpp)
+    target_link_libraries(text_document_tests PRIVATE wrapper_engine)
+    add_test(NAME text_document_tests COMMAND text_document_tests)
 endif()
