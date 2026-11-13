@@ -109,6 +109,28 @@ std::string TextDocument::capitalize_sentences()
     return update_text(value);
 }
 
+std::string TextDocument::number_sentences()
+{
+    const auto     value  = text::decode_utf8(text_);
+    const auto     ranges = text::sentence_ranges(value);
+    std::u32string numbered;
+    std::size_t    ordinal = 1;
+    for (const auto& range : ranges)
+    {
+        if (!numbered.empty())
+        {
+            numbered.push_back(U'\n');
+        }
+        const auto number = std::to_string(ordinal);
+        numbered.append(number.begin(), number.end());
+        numbered.append(U". ");
+        numbered.append(value, range.first, range.second - range.first);
+        ++ordinal;
+    }
+
+    return update_text(numbered);
+}
+
 std::string TextDocument::update_text(const std::u32string& value)
 {
     std::string updated = text::encode_utf8(value);

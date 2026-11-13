@@ -14,6 +14,7 @@ class TextDocument
     [[nodiscard]] std::string        find_phrase(const std::string& phrase) const;
     [[nodiscard]] std::string        capitalize_words();
     [[nodiscard]] std::string        capitalize_sentences();
+    [[nodiscard]] std::string        number_sentences();
 
   private:
     [[nodiscard]] std::string update_text(const std::u32string& value);

@@ -363,6 +363,87 @@ void distinguishes_possessives_from_closing_quotes()
     }
 }
 
+void numbers_sentences_and_unterminated_tail()
+{
+    TextDocument document("one. two! three? tail");
+
+    require(document.number_sentences() == "1. one.\n2. two!\n3. three?\n4. tail",
+            "Each sentence and nonempty tail must receive a consecutive number");
+    require(document.text() == "1. one.\n2. two!\n3. three?\n4. tail",
+            "Numbering must update document state");
+}
+
+void numbers_terminal_groups_once()
+{
+    TextDocument document("  one...  two?!  ");
+
+    require(document.number_sentences() == "1. one...\n2. two?!",
+            "Terminal groups must count as one ending and outer spaces must be trimmed");
+}
+
+void numbers_quoted_sentences()
+{
+    TextDocument document("\"one.\" two");
+
+    require(document.number_sentences() == "1. \"one.\"\n2. two",
+            "Closing quote must stay with the sentence before it");
+}
+
+void numbers_empty_whitespace_and_bare_text()
+{
+    struct Sample
+    {
+        const char* input;
+        const char* expected;
+    };
+    const std::array samples = {
+        Sample{"", ""},
+        Sample{" \t\n\r\v\f", ""},
+        Sample{"text", "1. text"},
+    };
+    for (const auto& sample : samples)
+    {
+        TextDocument document(sample.input);
+        require(document.number_sentences() == sample.expected,
+                "Empty text must have no numbers; bare nonempty text must start at one");
+        require(document.text() == sample.expected, "Numbering must commit even an empty result");
+    }
+}
+
+void numbers_unicode_sentences_with_closing_brackets()
+{
+    TextDocument document(u8"  «ёж!» (кот?) [пёс...] хвост");
+
+    require(document.number_sentences() == u8"1. «ёж!»\n2. (кот?)\n3. [пёс...]\n4. хвост",
+            "Unicode text and closing brackets must remain intact without changing case");
+}
+
+void numbering_preserves_internal_whitespace()
+{
+    TextDocument document("  one  line\nstill one. \t two!\r\n tail ");
+
+    require(document.number_sentences() == "1. one  line\nstill one.\n2. two!\n3. tail",
+            "Internal whitespace must survive; generated lines must have no trailing newline");
+}
+
+void numbering_reuses_quote_and_apostrophe_boundaries()
+{
+    TextDocument document(R"(dogs' toys. 'go.' "next!"?"tail.")");
+
+    require(document.number_sentences() == "1. dogs' toys.\n2. 'go.'\n3. \"next!\"?\n4. \"tail.\"",
+            "Numbering must reuse correct possessive and adjacent-quote boundaries");
+}
+
+void numbers_continue_beyond_one_digit()
+{
+    TextDocument document("a. b. c. d. e. f. g. h. i. j. k. l.");
+
+    require(
+        document.number_sentences() ==
+            "1. a.\n2. b.\n3. c.\n4. d.\n5. e.\n6. f.\n7. g.\n8. h.\n9. i.\n10. j.\n11. k.\n12. l.",
+        "Sequence must produce decimal numbers beyond nine");
+}
+
 } // namespace
 
 int main()
@@ -414,6 +495,16 @@ int main()
             {"treats_internal_apostrophes_as_text", treats_internal_apostrophes_as_text},
             {"distinguishes_possessives_from_closing_quotes",
              distinguishes_possessives_from_closing_quotes},
+            {"numbers_sentences_and_unterminated_tail", numbers_sentences_and_unterminated_tail},
+            {"numbers_terminal_groups_once", numbers_terminal_groups_once},
+            {"numbers_quoted_sentences", numbers_quoted_sentences},
+            {"numbers_empty_whitespace_and_bare_text", numbers_empty_whitespace_and_bare_text},
+            {"numbers_unicode_sentences_with_closing_brackets",
+             numbers_unicode_sentences_with_closing_brackets},
+            {"numbering_preserves_internal_whitespace", numbering_preserves_internal_whitespace},
+            {"numbering_reuses_quote_and_apostrophe_boundaries",
+             numbering_reuses_quote_and_apostrophe_boundaries},
+            {"numbers_continue_beyond_one_digit", numbers_continue_beyond_one_digit},
         });
     }
     catch (...)
