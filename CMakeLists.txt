@@ -22,7 +22,12 @@ add_executable(wrapper_app src/main.cpp)
 target_link_libraries(wrapper_app PRIVATE wrapper_engine)
 
 if(BUILD_TESTING)
-    add_test(NAME BaseExecutionTest COMMAND wrapper_app)
+    add_test(NAME BaseExecutionTest
+        COMMAND "${CMAKE_COMMAND}"
+            "-DWRAPPER_APP=$<TARGET_FILE:wrapper_app>"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/check_demo.cmake"
+    )
+    set_tests_properties(BaseExecutionTest PROPERTIES TIMEOUT 15)
 
     add_executable(arguments_tests src/tests/arguments_tests.cpp)
     target_link_libraries(arguments_tests PRIVATE wrapper_engine)
