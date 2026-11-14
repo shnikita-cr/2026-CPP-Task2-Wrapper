@@ -1,5 +1,6 @@
 #include "utf8.h"
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <stdexcept>
@@ -36,15 +37,16 @@ constexpr char32_t    last_surrogate      = 0xDFFF;
 
 [[nodiscard]] const Encoding& encoding_for_lead(unsigned char lead)
 {
-    for (const auto& encoding : encodings)
+    const auto found = std::find_if(encodings.begin(), encodings.end(),
+                                    [lead](const Encoding& encoding)
+                                    {
+                                        return (lead & ~encoding.mask) == encoding.prefix;
+                                    });
+    if (found == encodings.end())
     {
-        if ((lead & ~encoding.mask) == encoding.prefix)
-        {
-            return encoding;
-        }
+        throw std::invalid_argument("Invalid UTF-8 leading byte");
     }
-
-    throw std::invalid_argument("Invalid UTF-8 leading byte");
+    return *found;
 }
 
 [[nodiscard]] char32_t read_character(const std::string& value, std::size_t& offset)

@@ -19,7 +19,7 @@ using test_support::require_throws;
 struct CustomArgument
 {
     std::string label;
-    int         revision;
+    int         revision = 0;
 };
 
 void preserves_integer_value()
@@ -197,8 +197,10 @@ int main()
             {"owns_const_c_string", owns_const_c_string},
             {"rejects_null_c_strings", rejects_null_c_strings},
             {"owns_temporary_string", owns_temporary_string},
-            {"owns_string_view_after_source_destruction",
-             owns_string_view_after_source_destruction},
+            {
+                "owns_string_view_after_source_destruction",
+                owns_string_view_after_source_destruction,
+            },
             {"preserves_string_view_length", preserves_string_view_length},
             {"accepts_empty_string_view", accepts_empty_string_view},
             {"owns_custom_copyable_type", owns_custom_copyable_type},

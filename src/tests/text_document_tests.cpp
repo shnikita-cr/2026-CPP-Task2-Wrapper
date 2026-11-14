@@ -86,6 +86,23 @@ void finds_utf8_phrases()
     require(document.find_phrase(u8"кот идёт") == "not found", "Missing phrase must not be found");
 }
 
+void searches_long_text_and_embedded_nulls()
+{
+    const TextDocument document(u8"fox sleeps. fox runs! ёж идёт? fox watches.");
+    require(document.find_phrase("missing phrase") == "not found",
+            "An absent phrase must be handled in longer UTF-8 text");
+    require(document.find_phrase("fox watches.") == "found", "Search must include the text suffix");
+    require(document.find_phrase(document.text() + "extra") == "not found",
+            "A phrase longer than the document must not match");
+
+    constexpr std::size_t length = 7;
+    const std::string     original("one\0two", length);
+    const TextDocument    binary(original);
+    require(binary.find_phrase(std::string("\0two", 4)) == "found",
+            "Search must preserve embedded nulls in both text and query");
+    require(binary.text() == original, "Search must preserve the entire document");
+}
+
 void rejects_invalid_search_queries()
 {
     const TextDocument document("original");
@@ -458,52 +475,81 @@ int main()
             {"respects_word_boundaries_and_case", respects_word_boundaries_and_case},
             {"replaces_russian_words", replaces_russian_words},
             {"allows_arbitrary_utf8_replacement", allows_arbitrary_utf8_replacement},
-            {"finds_exact_case_sensitive_phrases_without_mutation",
-             finds_exact_case_sensitive_phrases_without_mutation},
+            {
+                "finds_exact_case_sensitive_phrases_without_mutation",
+                finds_exact_case_sensitive_phrases_without_mutation,
+            },
             {"finds_utf8_phrases", finds_utf8_phrases},
+            {"searches_long_text_and_embedded_nulls", searches_long_text_and_embedded_nulls},
             {"rejects_invalid_search_queries", rejects_invalid_search_queries},
             {"rejects_invalid_replacement_sources", rejects_invalid_replacement_sources},
             {"rejects_invalid_replacement_value", rejects_invalid_replacement_value},
             {"rejects_invalid_document_utf8", rejects_invalid_document_utf8},
             {"handles_empty_document", handles_empty_document},
-            {"accepts_arguments_aliased_to_document_storage",
-             accepts_arguments_aliased_to_document_storage},
+            {
+                "accepts_arguments_aliased_to_document_storage",
+                accepts_arguments_aliased_to_document_storage,
+            },
             {"preserves_utf8_without_matches", preserves_utf8_without_matches},
             {"capitalizes_word_initials", capitalizes_word_initials},
-            {"capitalizes_only_first_letter_in_each_token",
-             capitalizes_only_first_letter_in_each_token},
-            {"capitalizes_words_separated_by_hyphens_and_emoji",
-             capitalizes_words_separated_by_hyphens_and_emoji},
-            {"preserves_empty_punctuation_and_capitalized_words",
-             preserves_empty_punctuation_and_capitalized_words},
+            {
+                "capitalizes_only_first_letter_in_each_token",
+                capitalizes_only_first_letter_in_each_token,
+            },
+            {
+                "capitalizes_words_separated_by_hyphens_and_emoji",
+                capitalizes_words_separated_by_hyphens_and_emoji,
+            },
+            {
+                "preserves_empty_punctuation_and_capitalized_words",
+                preserves_empty_punctuation_and_capitalized_words,
+            },
             {"capitalizes_sentence_initials", capitalizes_sentence_initials},
-            {"capitalizes_sentences_without_changing_layout",
-             capitalizes_sentences_without_changing_layout},
-            {"does_not_treat_newlines_as_sentence_endings",
-             does_not_treat_newlines_as_sentence_endings},
+            {
+                "capitalizes_sentences_without_changing_layout",
+                capitalizes_sentences_without_changing_layout,
+            },
+            {
+                "does_not_treat_newlines_as_sentence_endings",
+                does_not_treat_newlines_as_sentence_endings,
+            },
             {"capitalizes_after_nested_closing_marks", capitalizes_after_nested_closing_marks},
-            {"preserves_empty_punctuation_and_capitalized_sentences",
-             preserves_empty_punctuation_and_capitalized_sentences},
+            {
+                "preserves_empty_punctuation_and_capitalized_sentences",
+                preserves_empty_punctuation_and_capitalized_sentences,
+            },
             {"capitalization_is_idempotent", capitalization_is_idempotent},
             {"finds_trimmed_unicode_sentence_ranges", finds_trimmed_unicode_sentence_ranges},
-            {"handles_empty_and_unterminated_sentence_ranges",
-             handles_empty_and_unterminated_sentence_ranges},
-            {"keeps_terminal_groups_and_nested_closers_together",
-             keeps_terminal_groups_and_nested_closers_together},
-            {"distinguishes_closing_quotes_from_new_opening_quotes",
-             distinguishes_closing_quotes_from_new_opening_quotes},
+            {
+                "handles_empty_and_unterminated_sentence_ranges",
+                handles_empty_and_unterminated_sentence_ranges,
+            },
+            {
+                "keeps_terminal_groups_and_nested_closers_together",
+                keeps_terminal_groups_and_nested_closers_together,
+            },
+            {
+                "distinguishes_closing_quotes_from_new_opening_quotes",
+                distinguishes_closing_quotes_from_new_opening_quotes,
+            },
             {"treats_internal_apostrophes_as_text", treats_internal_apostrophes_as_text},
-            {"distinguishes_possessives_from_closing_quotes",
-             distinguishes_possessives_from_closing_quotes},
+            {
+                "distinguishes_possessives_from_closing_quotes",
+                distinguishes_possessives_from_closing_quotes,
+            },
             {"numbers_sentences_and_unterminated_tail", numbers_sentences_and_unterminated_tail},
             {"numbers_terminal_groups_once", numbers_terminal_groups_once},
             {"numbers_quoted_sentences", numbers_quoted_sentences},
             {"numbers_empty_whitespace_and_bare_text", numbers_empty_whitespace_and_bare_text},
-            {"numbers_unicode_sentences_with_closing_brackets",
-             numbers_unicode_sentences_with_closing_brackets},
+            {
+                "numbers_unicode_sentences_with_closing_brackets",
+                numbers_unicode_sentences_with_closing_brackets,
+            },
             {"numbering_preserves_internal_whitespace", numbering_preserves_internal_whitespace},
-            {"numbering_reuses_quote_and_apostrophe_boundaries",
-             numbering_reuses_quote_and_apostrophe_boundaries},
+            {
+                "numbering_reuses_quote_and_apostrophe_boundaries",
+                numbering_reuses_quote_and_apostrophe_boundaries,
+            },
             {"numbers_continue_beyond_one_digit", numbers_continue_beyond_one_digit},
         });
     }

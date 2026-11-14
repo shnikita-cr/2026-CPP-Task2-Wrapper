@@ -66,7 +66,12 @@ std::string TextDocument::find_phrase(const std::string& phrase) const
     }
     (void)text::decode_utf8(phrase);
 
-    return text_.find(phrase) != std::string::npos ? "found" : "not found";
+    const auto found = std::search(text_.begin(), text_.end(), phrase.begin(), phrase.end(),
+                                   [](char left, char right)
+                                   {
+                                       return left == right;
+                                   });
+    return found != text_.end() ? "found" : "not found";
 }
 
 std::string TextDocument::capitalize_words()
@@ -96,13 +101,14 @@ std::string TextDocument::capitalize_sentences()
     const auto ranges = text::sentence_ranges(value);
     for (const auto& range : ranges)
     {
-        for (std::size_t index = range.first; index < range.second; ++index)
+        const auto first =
+            value.begin() + static_cast<std::u32string::difference_type>(range.first);
+        const auto last =
+            value.begin() + static_cast<std::u32string::difference_type>(range.second);
+        const auto letter = std::find_if(first, last, text::is_letter);
+        if (letter != last)
         {
-            if (text::is_letter(value[index]))
-            {
-                value[index] = text::uppercase(value[index]);
-                break;
-            }
+            *letter = text::uppercase(*letter);
         }
     }
 

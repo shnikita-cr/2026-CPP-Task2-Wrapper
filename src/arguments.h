@@ -13,6 +13,7 @@
 class ArgumentValue
 {
   public:
+    // Implicit conversions support named argument lists such as {{"count", 4}}.
     ArgumentValue(std::string value) : value_(std::move(value))
     {
     }

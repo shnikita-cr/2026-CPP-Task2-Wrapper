@@ -1,6 +1,7 @@
 #include "test_support.h"
 #include "wrapper.h"
 
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -46,6 +47,8 @@ class Subject
         return std::to_string(lhs - rhs);
     }
 
+    // NOLINTBEGIN(modernize-use-string-view) -- These fixtures test the owning string result
+    // contract.
     std::string zero()
     {
         ++calls;
@@ -69,6 +72,7 @@ class Subject
         ++calls;
         return {};
     }
+    // NOLINTEND(modernize-use-string-view)
 
     std::string mixed(int number, const std::string& prefix, CustomArgument payload)
     {
@@ -76,10 +80,10 @@ class Subject
         return std::to_string(number) + ":" + prefix + ":" + std::move(payload.label);
     }
 
-    std::string six(int first, int second, int third, int fourth, int fifth, int sixth)
+    template <typename... Values> std::string sum_many(Values... values)
     {
         ++calls;
-        return std::to_string(first + second + third + fourth + fifth + sixth);
+        return std::to_string((values + ...));
     }
 
     std::string view(std::string_view text)
@@ -124,8 +128,13 @@ void require_argument_error(Callable&& callable, const std::string& name)
     }
     catch (const std::invalid_argument& error)
     {
-        require(std::string(error.what()).find(name) != std::string::npos,
-                "Argument error must include the offending name");
+        const std::string message(error.what());
+        const auto found = std::search(message.begin(), message.end(), name.begin(), name.end(),
+                                       [](char left, char right)
+                                       {
+                                           return left == right;
+                                       });
+        require(found != message.end(), "Argument error must include the offending name");
         return;
     }
 
@@ -155,6 +164,8 @@ void preserves_named_parameter_order()
     require(wrapper.execute() == "2", "Defaults must bind by list order rather than name order");
     require(wrapper.execute({{"alpha", replacement}, {"zeta", 4}}) == "-4",
             "Override dictionary order must not change positional arguments");
+    require(wrapper.execute({{"zeta", 4}, {"alpha", replacement}}) == "-4",
+            "Reversing override insertion order must preserve positional binding");
 }
 
 void calls_original_object_through_command_interface()
@@ -210,13 +221,12 @@ void supports_six_arguments()
     constexpr int fifth = 5;
     constexpr int sixth = 6;
     Subject       subject;
-    Wrapper       wrapper(&subject, &Subject::six,
-                          {{"first", 1},
-                           {"second", 2},
-                           {"third", 3},
-                           {"fourth", 4},
-                           {"fifth", fifth},
-                           {"sixth", sixth}});
+    ArgumentList  defaults = {
+        {"first", 1},  {"second", 2},    {"third", 3},
+        {"fourth", 4}, {"fifth", fifth}, {"sixth", sixth},
+    };
+    Wrapper wrapper(&subject, &Subject::sum_many<int, int, int, int, int, int>,
+                    std::move(defaults));
 
     require(wrapper.execute() == "21", "Arity must not be restricted to a fixed overload set");
 }
@@ -388,8 +398,10 @@ int main()
         return test_support::run({
             {"applies_defaults_and_partial_overrides", applies_defaults_and_partial_overrides},
             {"preserves_named_parameter_order", preserves_named_parameter_order},
-            {"calls_original_object_through_command_interface",
-             calls_original_object_through_command_interface},
+            {
+                "calls_original_object_through_command_interface",
+                calls_original_object_through_command_interface,
+            },
             {"supports_const_methods_on_const_objects", supports_const_methods_on_const_objects},
             {"supports_noexcept_methods", supports_noexcept_methods},
             {"supports_const_noexcept_methods", supports_const_noexcept_methods},

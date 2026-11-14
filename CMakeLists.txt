@@ -20,6 +20,9 @@ endif()
 
 add_executable(wrapper_app src/main.cpp)
 target_link_libraries(wrapper_app PRIVATE wrapper_engine)
+set_target_properties(wrapper_app PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples"
+)
 
 if(BUILD_TESTING)
     add_test(NAME BaseExecutionTest
@@ -48,4 +51,8 @@ if(BUILD_TESTING)
     add_executable(text_document_tests src/tests/text_document_tests.cpp)
     target_link_libraries(text_document_tests PRIVATE wrapper_engine)
     add_test(NAME text_document_tests COMMAND text_document_tests)
+
+    add_executable(integration_tests src/tests/integration_tests.cpp)
+    target_link_libraries(integration_tests PRIVATE wrapper_engine)
+    add_test(NAME integration_tests COMMAND integration_tests)
 endif()

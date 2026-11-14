@@ -1,6 +1,7 @@
 #include "test_support.h"
 #include "text/utf8.h"
 
+#include <algorithm>
 #include <array>
 #include <limits>
 #include <stdexcept>
@@ -103,8 +104,12 @@ void rejects_non_scalar_encoding()
     constexpr char32_t first_surrogate = 0xD800;
     constexpr char32_t last_surrogate  = 0xDFFF;
     constexpr char32_t beyond_unicode  = 0x110000;
-    const std::array   invalid         = {first_surrogate, last_surrogate, beyond_unicode,
-                                          std::numeric_limits<char32_t>::max()};
+    const std::array   invalid         = {
+        first_surrogate,
+        last_surrogate,
+        beyond_unicode,
+        std::numeric_limits<char32_t>::max(),
+    };
 
     for (const auto character : invalid)
     {
@@ -139,11 +144,8 @@ void uppercases_ascii_and_russian_letters()
 {
     const std::u32string original = U"azаяёAZАЯЁ09_🐈";
     const std::u32string expected = U"AZАЯЁAZАЯЁ09_🐈";
-    std::u32string       converted;
-    for (const auto character : original)
-    {
-        converted.push_back(text::uppercase(character));
-    }
+    std::u32string       converted(original.size(), U'\0');
+    std::transform(original.begin(), original.end(), converted.begin(), text::uppercase);
 
     require(converted == expected, "Case mapping must preserve other valid Unicode characters");
 }
