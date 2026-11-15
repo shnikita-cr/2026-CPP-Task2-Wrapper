@@ -37,12 +37,13 @@ constexpr char32_t    last_surrogate      = 0xDFFF;
 
 [[nodiscard]] const Encoding& encoding_for_lead(unsigned char lead)
 {
-    const auto found = std::find_if(encodings.begin(), encodings.end(),
-                                    [lead](const Encoding& encoding)
-                                    {
-                                        return (lead & ~encoding.mask) == encoding.prefix;
-                                    });
-    if (found == encodings.end())
+    const auto* const last  = encodings.data() + encodings.size();
+    const auto* const found = std::find_if(encodings.data(), last,
+                                           [lead](const Encoding& encoding)
+                                           {
+                                               return (lead & ~encoding.mask) == encoding.prefix;
+                                           });
+    if (found == last)
     {
         throw std::invalid_argument("Invalid UTF-8 leading byte");
     }
