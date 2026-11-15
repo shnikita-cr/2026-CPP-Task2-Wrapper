@@ -6,7 +6,6 @@
 #include "method_traits.h"
 
 #include <algorithm>
-#include <functional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -90,7 +89,7 @@ template <typename Object, typename Method> class Wrapper final : public IComman
         return std::apply(
             [this](const auto&... values)
             {
-                return std::invoke(method_, object_, values...);
+                return (object_->*method_)(values...);
             },
             bound);
     }
