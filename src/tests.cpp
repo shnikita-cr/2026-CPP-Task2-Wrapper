@@ -138,8 +138,8 @@ void test_wrapper_basic() {
     const auto first_result = next.call();
     const auto second_result = next.call();
 
-    expect(first_result == "1" && second_result == "2",
-        "вызов noexcept-метода без аргументов");
+    expect(first_result == "1", "первый вызов noexcept-метода");
+    expect(second_result == "2", "второй вызов noexcept-метода");
 }
 
 void test_wrapper_special_signatures() {
