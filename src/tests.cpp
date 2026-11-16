@@ -135,7 +135,11 @@ void test_wrapper_basic() {
     expect(scale.call({ {"value", kFour} }) == "6", "передача аргумента типа double");
 
     Wrapper next(&box, &Toolbox::next, {});
-    expect(next.call() == "1" && next.call() == "2", "вызов noexcept-метода без аргументов");
+    const auto first_result = next.call();
+    const auto second_result = next.call();
+
+    expect(first_result == "1" && second_result == "2",
+        "вызов noexcept-метода без аргументов");
 }
 
 void test_wrapper_special_signatures() {
