@@ -98,3 +98,39 @@ cmake --build build-sanitizers --config Debug
 
 find build-sanitizers -type f -perm -u+x ! -path '*/CMakeFiles/*' ! -name '*.so*' -exec timeout 60 {} \;
 ```
+
+## Реализация WrapperEngine
+
+`Wrapper` запоминает объект, метод и список именованных значений по умолчанию.
+`Engine` хранит адреса обёрток под строковыми именами. При вызове `Engine::execute()`
+обёртка копирует список, заменяет переданные значения по имени и вызывает метод
+с параметрами в исходном порядке. Следующий вызов снова начинается с исходных
+значений по умолчанию.
+
+```cpp
+TextDocument document("кот спит. котик играет.");
+Wrapper replaceWrapper(&document, &TextDocument::replace_words, {{"old_word", "кот"}, {"new_word", "собака"}});
+
+Engine engine;
+engine.register_command(&replaceWrapper, "replace");
+std::string result = engine.execute("replace", {{"new_word", "пёс"}});
+```
+
+Результат — `"пёс спит. котик играет."`. Значение `old_word` берётся из списка
+аргументов по умолчанию.
+
+### Сборка и запуск на Windows
+
+Нужны CMake и Visual Studio с компонентами разработки на C++. Выполняйте команды
+из корня репозитория. CMake сам выберет установленную Visual Studio.
+
+```powershell
+cmake -S . -B build-vs2026 -A x64
+cmake --build build-vs2026 --config Debug
+.\build-vs2026\Debug\wrapper_app.exe
+```
+
+Для пересборки повторите `cmake --build build-vs2026 --config Debug`. При запуске
+можно ввести свой текст одной строкой или нажать Enter для демонстрационного
+текста. Затем операции выбираются через меню. Документ поддерживает латиницу
+и кириллицу в UTF-8.
