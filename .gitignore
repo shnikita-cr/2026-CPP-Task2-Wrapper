@@ -42,6 +42,7 @@
 build/
 Build/
 build-*/
+cmake-build-*/
 
 # CMake generated files
 CMakeFiles/
@@ -68,4 +69,6 @@ Testing/
 .cache/
 
 .vs
+.idea/
 .idea
+.DS_Store
