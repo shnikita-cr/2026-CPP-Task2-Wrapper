@@ -18,9 +18,9 @@ std::string TextProcessor::replace_words(const std::string& old_word, const std:
         std::size_t end = position + old_word.length();
 
         // Check, that we are replacing the whole word (to left and to right of found word - not character or number)
-        bool left_boundary_correct = (position == 0) || !std::isalnum(static_cast<unsigned char>(my_text[position - 1]));
+        bool left_boundary_correct = (position == 0) || !static_cast<bool>(std::isalnum(static_cast<unsigned char>(my_text[position - 1])));
 
-        bool right_boundary_correct = (end == my_text.length()) || !std::isalnum(static_cast<unsigned char>(my_text[end]));
+        bool right_boundary_correct = (end == my_text.length()) || !static_cast<bool>(std::isalnum(static_cast<unsigned char>(my_text[end])));
         
         if (left_boundary_correct && right_boundary_correct) {
             my_text.replace(position, old_word.length(), new_word);
@@ -34,7 +34,7 @@ std::string TextProcessor::replace_words(const std::string& old_word, const std:
 }
 
 // Search for string (returns "Found" or "Not found")
-std::string TextProcessor::find_phrase(const std::string& phrase) const {
+std::string_view TextProcessor::find_phrase(const std::string& phrase) const {
     if (my_text.find(phrase) != std::string::npos) {
         return "Found";
     }
@@ -48,7 +48,7 @@ std::string TextProcessor::capitalize_each_word() {
     for (std::size_t i = 0; i < my_text.length(); ++i) {
         unsigned char character = my_text[i];
 
-        if (std::isalnum(character)) {
+        if (static_cast<bool>(std::isalpha(character))) {
             if (new_word) {
                 my_text[i] = static_cast<char>(std::toupper(character));
             }
@@ -67,11 +67,9 @@ std::string TextProcessor::capitalize_sentence_starts() {
     for (std::size_t i = 0; i < my_text.length(); ++i) {
         unsigned char character = my_text[i];
 
-        if (std::isalpha(character)) {
-            if (new_sentence) {
-                my_text[i] = static_cast<char>(std::toupper(character));
-                new_sentence = false;
-            }
+        if (static_cast<bool>(std::isalpha(character)) && new_sentence) {
+            my_text[i] = static_cast<char>(std::toupper(character));
+            new_sentence = false;
         }
         if (character == '.' || character == '!' || character == '?') {
             new_sentence = true;
@@ -89,7 +87,7 @@ std::string TextProcessor::number_sentences() {
     for (char character : my_text) {
         if (sentence_start) {
             // Skip whitespaces before sentences
-            if (std::isspace(character)) continue;
+            if (static_cast<bool>(std::isspace(character))) { continue;}
 
             result << sentence_number++ << ". ";
             sentence_start = false;
