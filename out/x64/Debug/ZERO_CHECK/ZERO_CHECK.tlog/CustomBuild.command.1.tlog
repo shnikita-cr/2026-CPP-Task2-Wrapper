@@ -1,0 +1,10 @@
+^C:\USERS\XIAOMI\DOCUMENTS\GITHUB2\2026-CPP-TASK2-WRAPPER\OUT\CMAKEFILES\5E25770C4ECEBB55E0E20A2ADE63EED9\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/xiaomi/Documents/GitHub2/2026-CPP-Task2-Wrapper -BC:/Users/xiaomi/Documents/GitHub2/2026-CPP-Task2-Wrapper/out --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/xiaomi/Documents/GitHub2/2026-CPP-Task2-Wrapper/out/WrapperEngineProject.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

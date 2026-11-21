@@ -5,5 +5,5 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(wrapper_app src/main.cpp)
+add_executable(wrapper_app src/main.cpp "src/text_processor.h" "src/engine.h" "src/wrapper.h")
 add_test(NAME BaseExecutionTest COMMAND wrapper_app)
