@@ -70,12 +70,22 @@ std::string Document::number_sentences() {
     out << "1. ";
 
     int number = 1;
-    for (std::size_t index = 0; index < text_.size(); ++index) {
-        out << text_[index];
+    bool skip_space = false;
 
-        if (text_[index] == '.' || text_[index] == '!' || text_[index] == '?') {
+    for (char character : text_) {
+        if (skip_space) {
+            if (std::isspace(static_cast<unsigned char>(character))) {
+                continue;
+            }
+            skip_space = false;
+        }
+
+        out << character;
+
+        if (character == '.' || character == '!' || character == '?') {
             ++number;
             out << '\n' << number << ". ";
+            skip_space = true;
         }
     }
 
