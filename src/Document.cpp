@@ -74,7 +74,7 @@ std::string Document::number_sentences() {
 
     for (char character : text_) {
         if (skip_space) {
-            if (std::isspace(static_cast<unsigned char>(character))) {
+            if (std::isspace(static_cast<unsigned char>(character))!=0) {
                 continue;
             }
             skip_space = false;
