@@ -27,12 +27,12 @@ int main() {
         std::cout << engine.execute(
             "replace",
             { {"oldWord", "world"}, {"newWord", "earth"} })
-            << std::endl;
-        std::cout << "After replace: " << doc.getText() << std::endl;
+            << '\n';
+        std::cout << "After replace: " << doc.getText() << '\n';
 
     }
     catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << '\n';
         return 1;
     }
 
