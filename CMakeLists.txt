@@ -11,7 +11,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(wrapper_lib INTERFACE)
 target_include_directories(wrapper_lib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-add_executable(wrapper_app examples/wrapper_app/main.cpp)
+add_executable(wrapper_app src/main.cpp)
 target_link_libraries(wrapper_app PRIVATE wrapper_lib)
 
 set_target_properties(wrapper_app PROPERTIES
