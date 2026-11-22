@@ -69,3 +69,12 @@ Testing/
 
 .vs
 .idea
+
+# Build directories
+builds/
+builds-lint/
+builds-memory/
+builds-sanitizers/
+
+#reports and test .txt
+*.txt
