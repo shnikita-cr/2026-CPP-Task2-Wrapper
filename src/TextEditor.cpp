@@ -48,10 +48,10 @@ std::vector<std::string> split_into_sentences(const std::string& text) {
     std::string current;
 
     for (std::size_t idx = 0; idx < text.size(); ++idx) {
-        const char ch = text[idx];
-        current.push_back(ch);
+        const char symbol = text[idx];
+        current.push_back(symbol);
 
-        if (is_sentence_terminator(ch)) {
+        if (is_sentence_terminator(symbol)) {
             while (idx + 1 < text.size() && is_sentence_terminator(text[idx + 1])) {
                 ++idx;
                 current.push_back(text[idx]);
@@ -80,6 +80,7 @@ const std::string& TextEditor::content() const noexcept {
     return content_;
 }
 
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 std::string TextEditor::replaceWord(const std::string& target,
                                     const std::string& replacement) const {
     if (target.empty()) {
@@ -93,7 +94,7 @@ std::string TextEditor::replaceWord(const std::string& target,
     while (cursor < content_.size()) {
         const std::size_t match = content_.find(target, cursor);
         if (match == std::string::npos) {
-            output.append(content_, cursor, std::string::npos);
+            output.append(content_, cursor);
             break;
         }
 
@@ -127,10 +128,10 @@ std::string TextEditor::capitalizeEachWord() const {
     std::string output = content_;
     bool inside_word = false;
 
-    for (char& ch : output) {
-        if (is_word_char(ch)) {
+    for (char& symbol : output) {
+        if (is_word_char(symbol)) {
             if (!inside_word) {
-                ch = to_upper_ascii(ch);
+                symbol = to_upper_ascii(symbol);
                 inside_word = true;
             }
         } else {
@@ -145,13 +146,13 @@ std::string TextEditor::capitalizeSentences() const {
     std::string output = content_;
     bool awaiting_first_letter = true;
 
-    for (char& ch : output) {
-        if (is_sentence_terminator(ch)) {
+    for (char& symbol : output) {
+        if (is_sentence_terminator(symbol)) {
             awaiting_first_letter = true;
             continue;
         }
-        if (awaiting_first_letter && is_letter(ch)) {
-            ch = to_upper_ascii(ch);
+        if (awaiting_first_letter && is_letter(symbol)) {
+            symbol = to_upper_ascii(symbol);
             awaiting_first_letter = false;
         }
     }
