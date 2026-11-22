@@ -7,7 +7,7 @@
 Document::Document(std::string text)
     : text_(std::move(text)) {}
 
-std::string Document::replace_words(const std::string &from, const std::string& to) {
+std::string Document::replace_words(const std::string &from, const std::string& to_str) {
     if (from.empty()) {
         return text_;
     }
@@ -16,8 +16,8 @@ std::string Document::replace_words(const std::string &from, const std::string& 
     std::size_t pos = 0;
 
     while ((pos = result.find(from, pos)) != std::string::npos) {
-        result.replace(pos, from.size(), to);
-        pos += to.size();
+        result.replace(pos, from.size(), to_str);
+        pos += to_str.size();
     }
 
     return result;
@@ -31,11 +31,11 @@ std::string Document::capitalize_words() {
     std::string result = text_;
     bool at_word_start = true;
 
-    for (char& ch : result) {
-        auto uc = static_cast<unsigned char>(ch);
-        if (std::isalnum(uc) != 0) {
+    for (char& character : result) {
+        auto unsigned_char = static_cast<unsigned char>(character);
+        if (std::isalnum(unsigned_char) != 0) {
             if (at_word_start) {
-                ch = static_cast<char>(std::toupper(uc));
+                character = static_cast<char>(std::toupper(unsigned_char));
             }
             at_word_start = false;
         }
@@ -51,13 +51,13 @@ std::string Document::capitalize_sentences() {
     std::string result = text_;
     bool sentence_start = true;
 
-    for (char& ch : result) {
-        auto uc = static_cast<unsigned char>(ch);
-        if (sentence_start && std::isalpha(uc)!=0) {
-            ch = static_cast<char>(std::toupper(uc));
+    for (char& character : result) {
+        auto unsigned_char = static_cast<unsigned char>(character);
+        if (sentence_start && std::isalpha(unsigned_char)!=0) {
+            character = static_cast<char>(std::toupper(unsigned_char));
             sentence_start = false;
         }
-        else if (ch == '.' || ch == '!' || ch == '?') {
+        else if (character == '.' || character == '!' || character == '?') {
             sentence_start = true;
         }
     }
@@ -70,10 +70,10 @@ std::string Document::number_sentences() {
     out << "1. ";
 
     int number = 1;
-    for (std::size_t i = 0; i < text_.size(); ++i) {
-        out << text_[i];
+    for (std::size_t index = 0; index < text_.size(); ++index) {
+        out << text_[index];
 
-        if (text_[i] == '.' || text_[i] == '!' || text_[i] == '?') {
+        if (text_[index] == '.' || text_[index] == '!' || text_[index] == '?') {
             ++number;
             out << '\n' << number << ". ";
         }

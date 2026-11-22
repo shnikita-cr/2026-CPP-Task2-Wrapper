@@ -50,18 +50,18 @@ int main() {
 
         std::cout << "Initial text:\n  " << doc.replace_words("___", "") << "\n\n";
 
-        auto r1 = engine.execute<std::string>(
+        auto result1 = engine.execute<std::string>(
             "replace",
             { { "from", std::string("world") },{ "to", std::string("C++") } });
-        std::cout << "replace(from=\"world\", to=\"C++\"):\n  " << r1 << "\n\n";
+        std::cout << "replace(from=\"world\", to=\"C++\"):\n  " << result1 << "\n\n";
 
-        auto r2 = engine.execute<std::string>(
+        auto result2 = engine.execute<std::string>(
             "replace",
             { { "from", std::string("cpp") } });
-        std::cout << "replace(from=\"cpp\", to=default \"hi\"):\n  " << r2 << "\n\n";
+        std::cout << "replace(from=\"cpp\", to=default \"hi\"):\n  " << result2 << "\n\n";
 
-        auto r3 = engine.execute<std::string>("replace");
-        std::cout << "replace() with default arguments:\n  " << r3 << "\n\n";
+        auto result3 = engine.execute<std::string>("replace");
+        std::cout << "replace() with default arguments:\n  " << result3 << "\n\n";
 
         bool hasHello = engine.execute<bool>(
             "find",

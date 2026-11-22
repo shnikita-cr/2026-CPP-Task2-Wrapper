@@ -23,14 +23,14 @@ public:
 	Class_t* example;
 	Method_t(Class_t::* func) (Args...);
 	ArgVec default_;
-	Wrapper(Class_t* ex, Method_t(Class_t::* f)(Args...), ArgVec defaults) : example(ex), func(f), default_(std::move(defaults)) {}
+	Wrapper(Class_t* exam, Method_t(Class_t::* func_n)(Args...), ArgVec defaults) : example(exam), func(func_n), default_(std::move(defaults)) {}
 	std::any execute(const ArgMap& arguments) override {
 		ArgMap new_args;
-		for (auto& [n, v] : default_) {
-			new_args[n] = v;
+		for (auto& [name, value] : default_) {
+			new_args[name] = value;
 		}
-		for (const auto& [n, v] : arguments) {
-			new_args[n] = v;
+		for (const auto& [name, value] : arguments) {
+			new_args[name] = value;
 		}
 		return call_func(new_args, std::make_index_sequence<sizeof...(Args)> {});
 	}
