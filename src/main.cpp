@@ -1,10 +1,40 @@
-#include<iostream>
-#include "placeholder.h"
+#include "Engine.h"
+#include "Factory.h"
+#include "TextDocument.h"
 
-int main(){
-    std::cout << "Hello Wrapper!\n";
-    std::cout << "Hello Engine!\n";
+#include <functional>
+#include <iostream>
+#include <string>
 
-    InitialArchitecturePlaceholder::projectInitialized();
-    return 0; 
+int main() {
+    try {
+        TextDocument doc("hello world. this is a test.");
+
+        auto replaceMethod =
+            [](TextDocument* obj,
+                const Arguments& args) -> std::string {
+                    return obj->replaceWord(args);
+            };
+
+        auto replaceWrapper = makeWrapper(
+            &doc,
+            replaceMethod,
+            Arguments{ {"oldWord", "hello"}, {"newWord", "hi"} });
+
+        Engine engine;
+        engine.register_command(std::move(replaceWrapper), "replace");
+
+        std::cout << engine.execute(
+            "replace",
+            { {"oldWord", "world"}, {"newWord", "earth"} })
+            << '\n';
+        std::cout << "After replace: " << doc.getText() << '\n';
+
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << '\n';
+        return 1;
+    }
+
+    return 0;
 }
