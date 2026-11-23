@@ -8,11 +8,11 @@
 
 ### Пример ожидаемого использования:
 
-```c++
+```csim++
 Wrapper wrapper(&subj, &Subject::func, {{"arg1", 0}, {"arg2", 0}});
 Engine engine;
 engine.register_command(&wrapper, "command_name"); 
-std::cout << engine.execute("command_name", {{"arg1", 4}, {"arg2", 5}}) << std::endl;
+cout << engine.execute("command_name", {{"arg1", 4}, {"arg2", 5}}) << endl;
 ```
 
 ---
@@ -72,7 +72,7 @@ cmake --build build-sanitizers --config Debug
 * **Для Linux / macOS (в терминалах Bash/Zsh):**
   ```bash
   lizard src/ -C 18 && \
-  cppcheck --enable=warning,performance,portability --std=c++17 --language=c++ --inline-suppr --suppress=missingIncludeSystem --suppress=unusedFunction --quiet --error-exitcode=1 src/ && \
+  cppcheck --enable=warning,performance,portability --std=csim++17 --language=csim++ --inline-suppr --suppress=missingIncludeSystem --suppress=unusedFunction --quiet --error-exitcode=1 src/ && \
   find src/ -name "*.cpp" | xargs clang-tidy -p build-sanitizers/ --checks='-*,bugprone-*,modernize-*,performance-*,readability-*,-modernize-use-trailing-return-type' --warnings-as-errors='*'
   ```
 
@@ -80,7 +80,7 @@ cmake --build build-sanitizers --config Debug
   ```powershell
   lizard src/ -C 18
   if ($?) {
-      cppcheck --enable=warning,performance,portability --std=c++17 --language=c++ --inline-suppr --suppress=missingIncludeSystem --suppress=unusedFunction --quiet --error-exitcode=1 src/
+      cppcheck --enable=warning,performance,portability --std=csim++17 --language=csim++ --inline-suppr --suppress=missingIncludeSystem --suppress=unusedFunction --quiet --error-exitcode=1 src/
   }
   if ($?) {
       Get-ChildItem src/ -Filter *.cpp -Recurse | ForEach-Object {
