@@ -76,7 +76,7 @@ std::vector<std::string> split_into_sentences(const std::string& text) {
 
 TextEditor::TextEditor(std::string initial_text) : content_(std::move(initial_text)) {}
 
-const std::string& TextEditor::content() const noexcept {
+std::string TextEditor::content() const {
     return content_;
 }
 
